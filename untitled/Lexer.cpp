@@ -1,4 +1,5 @@
-#include "header.h"
+#include "lexer.h"
+#include "ErrorHandling.h"
 
 //Function to split the vector into data
 std::vector<std::string> split(const std::string &s, char delimiter) { //Custom Function
@@ -18,7 +19,9 @@ map<string,map<string,string>> loadMap(){
 
     ifstream file("../Table Driven Lexer - Sheet1.csv"); //Open the CSV File
     if (!file.is_open()) { //Error Message in case file cant be open
-        cerr << "Error: Unable to open the file." << std::endl;
+
+        cerr << "\033[1;31m FILE ERROR: Unable to open the file.\033[0m" << std::endl;
+        terminate();
         return lexerTable;
     }
 
@@ -107,14 +110,15 @@ string checkValidToken(char value){
         return EMPTY_SPACE_TOKEN;
     }
 
-    if((value == MULTIPLY_TOKEN) || (value == DIVISION_TOKEN) || (value == ADDITION_TOKEN) || (value == SUBTRACTION_TOKEN)
-    || (value == LESS_THAN_TOKEN) || (value == GREATER_THAN_TOKEN) || (value == EQUALS_TOKEN) || (value == NOT_TOKEN)
-    || (value == OPEN_BRACKET_TOKEN) || (value == CLOSE_BRACKET_TOKEN) || (value == HASH_TOKEN) || (value == UNDERSCORE_TOKEN)
-    || (value == DOT_TOKEN) || (value == OPEN_CURLY_BRACKET_TOKEN) || (value == CLOSE_CURLY_BRACKET_TOKEN) || (value == COLON_TOKEN)
-    || (value == SEMICOLON_TOKEN))
+    if((value == MULTIPLY_VALUE) || (value == DIVISION_VALUE) || (value == ADDITION_VALUE) || (value == SUBTRACTION_VALUE)
+    || (value == LESS_THAN_VALUE) || (value == GREATER_THAN_VALUE) || (value == EQUALS_VALUE) || (value == NOT_VALUE)
+    || (value == OPEN_BRACKET_VALUE) || (value == CLOSE_BRACKET_VALUE) || (value == HASH_VALUE) || (value == UNDERSCORE_VALUE)
+    || (value == DOT_VALUE) || (value == OPEN_CURLY_BRACKET_VALUE) || (value == CLOSE_CURLY_BRACKET_VALUE) || (value == COLON_VALUE)
+    || (value == SEMICOLON_VALUE))
     {
         string str;
-        return str+=value;
+        str += value;
+        return str;
     }
 
     return INVALID_TOKEN;
@@ -124,10 +128,20 @@ vector<string> getListOfTokens(string line) {
     line += " ";
     vector<string> tokens;
     string token;
+
     for (char c: line) {
         token = checkValidToken(c);
         if (token == INVALID_TOKEN){
-            //cerr << "Token Unrecognized";
+            //Throw Error that character is unrecognized
+            try{
+                string errorMsg = UNRECOGNIZED_CHAR_ERROR;
+                errorMsg.push_back(c);
+                throw UnrecognizedCharacter(errorMsg);
+            }
+            catch (const exception& e){
+                cerr << "\033[1;31mUNRECOGNIZED Character: " << e.what() << "\033[0m" << endl;
+                terminate();
+            }
         }
         tokens.push_back(token);
     }
@@ -139,10 +153,11 @@ vector<string> traverseDFSA(map<string,map<string,string>> lexerTable, map<strin
     bool delimFlag = true;
     vector<string> tokens;
     string token;
+    int counter = -2;
 
 
     for (const std::string& letter : allLetters) {
-
+        counter += 1;
         if(letter == EMPTY_SPACE_TOKEN && delimFlag){ //Handles delim after delim
             continue; //SKIP Transition
         }
@@ -150,15 +165,16 @@ vector<string> traverseDFSA(map<string,map<string,string>> lexerTable, map<strin
         if(letter == EMPTY_SPACE_TOKEN && !delimFlag){ //Checks if state is a final state
             //Check which final state
             try {
-                 token = finalStates.at(currentState); //If token is in a final State
-                 tokens.push_back(token); //Push Back Token
-                 delimFlag = true; //Delim Flag is true
-                 currentState = START_STATE; //Set current state to initial state
+                token = finalStates.at(currentState); //If token is in a final State
+                tokens.push_back(token); //Push Back Token
+                delimFlag = true; //Delim Flag is true
+                currentState = START_STATE; //Set current state to initial state
             } catch (const out_of_range& e) {
-                cerr << "Error: Key '" << currentState << "' not a final state. Exception message: " << e.what() << endl;
+                cerr << "\033[1;31m INVALID STATE at: '" << allLetters[counter] << "' not a final state.\033[0m \n Exception message:" << e.what() << endl;
                 tokens.emplace_back(INVALID_TOKEN); //Adds invalid token
                 delimFlag = true; //Delim Flag is true
                 currentState = START_STATE;
+                terminate();
             }
             continue; //SKIP Transition
         }
@@ -166,7 +182,6 @@ vector<string> traverseDFSA(map<string,map<string,string>> lexerTable, map<strin
         delimFlag = false; //no longer dealing with delimiters
 
         currentState = lexerTable[currentState][letter]; //Transition to the next state
-
     }
     return tokens;
 }
@@ -181,7 +196,8 @@ vector<string> reviseTokens(const vector<string>& allTokens, vector<string> allW
        if(token == COLOR_LITERAL){
            for (char c : allWords[counter]) {
                if (!((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f') || (c == '#') || (isdigit(c)))) { //If Not a valid Color literal raise and error
-                   cerr << c << " is not a valid HEX Value" << endl;
+                   cerr << "\033[1;31m INVALID HEX: '" << c << "' not a valid Hex Value.\033[0m \n Exception message:" << endl;
+                   terminate();
                } //End Check for valid hex literal
            } //End Loop through colorLiteral
            continue;
@@ -207,7 +223,7 @@ vector<string> reviseTokens(const vector<string>& allTokens, vector<string> allW
                continue;
            }
 
-           cerr << "Invalid Special Character trying to be accessed" << endl;
+           cerr << "\033[1;31m INVALID SPECIAL VARIABLE: '" << word << "' not a valid Special variable.\033[0m\n" << endl;
        }//End Check for valid Special Var
 
        if(token == WORD){
@@ -233,21 +249,22 @@ vector<string> reviseTokens(const vector<string>& allTokens, vector<string> allW
 
            if ((word == "let") || (word == "if") || (word == "else") || (word == "for") || (word == "while") ||
            (word == "fun") || (word == "return") || (word == "not")){
-               revisedToken[counter] = word;
+               revisedToken[counter] = "<"+word+">";
                continue;
            }
 
            bool correctWord = true;
            for (char c : word){
-               if ( !( (isalpha(c)) || c == '_') ) { //If Not a valid Color literal raise and error
+               if ( !( (isalpha(c)) || c == '_') ) { //If Not a valid Word
                    correctWord = false;
-               } //End Check for valid hex literal
+               }
            } //End Loop To check for identifier
 
            if (correctWord){
                revisedToken[counter] = IDENTIFIER;
            }else{
-               cerr << "Incorrect Format for identifier";
+               cerr << "\033[1;31m UNRECOGNIZED WORD: '" << word << "' not a valid Identifier.\033[0m \n" << endl;
+               terminate();
            }
            continue;
        } //Handle the word Token
@@ -265,6 +282,51 @@ vector<string> reviseTokens(const vector<string>& allTokens, vector<string> allW
 
         if ((token == ">") || (token == "<") || (token == ">=") || (token == "<=") || (token == "==") || (token == "!=")){
             revisedToken[counter] = RELATIONAL_OP;
+            continue;
+        }
+
+        if ((token == ",")){
+            revisedToken[counter] = COMMA_TOKEN;
+            continue;
+        }
+
+        if ((token == ".")){
+            revisedToken[counter] = DOT_TOKEN;
+            continue;
+        }
+
+        if((token == ";")){
+            revisedToken[counter] = SEMICOLON_TOKEN;
+            continue;
+        }
+
+        if((token == ":")){
+            revisedToken[counter] = COLON_TOKEN;
+            continue;
+        }
+
+        if ((token == "{")){
+            revisedToken[counter] = OPEN_CURLY_BRACKET_TOKEN;
+            continue;
+        }
+
+        if ((token == "}")){
+            revisedToken[counter] = CLOSE_CURLY_BRACKET_TOKEN;
+            continue;
+        }
+
+        if ((token == "(")){
+            revisedToken[counter] = OPEN_BRACKET_TOKEN;
+            continue;
+        }
+
+        if ((token == ")")){
+            revisedToken[counter] = CLOSE_BRACKET_TOKEN;
+            continue;
+        }
+
+        if ((token == "=")){
+            revisedToken[counter] = EQUALS_TOKEN;
             continue;
         }
     }//Loop through all tokens
