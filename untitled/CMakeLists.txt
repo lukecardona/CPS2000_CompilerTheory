@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(untitled Lexer.cpp Parser.cpp header.h)
+add_executable(untitled Lexer.cpp Parser.cpp lexer.h ErrorHandling.h parser.h XMLGeneration.cpp visitor.h SemanticAnylsis.cpp CodeGeneration.cpp)

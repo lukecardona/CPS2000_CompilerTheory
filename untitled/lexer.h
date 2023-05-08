@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <memory>
 #include <stack>
+#include <tuple>
 
 #define FINAL_STATE "1"
 #define LETTER_TOKEN "<letter>"

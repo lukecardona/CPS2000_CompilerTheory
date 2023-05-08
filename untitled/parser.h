@@ -40,190 +40,420 @@
 #define RETURN_TOKEN "<return>"
 #define FUN_TOKEN "<fun>"
 
+class BlockNode;
+class ExpressionNode;
+class ProgramNode;
+class Visitor;
+
 class ASTNode {
 public:
     // Constructor
     explicit ASTNode(string  nodeType) : nodeType(std::move(nodeType)) {}
 
     // Get node type
-    const string& getNodeType() const;
-
-    // Add a child to the node
-    virtual void addChild(unique_ptr<ASTNode> child);
-
-    // Get the children of the node
-    const vector<unique_ptr<ASTNode>>& getChildren() const;
+    virtual const string& getNodeType() const;
 
     // Virtual destructor for proper cleanup in derived classes
     virtual ~ASTNode() = default;
+    virtual void accept(Visitor* visitor) = 0;
 
+    unique_ptr<ProgramNode> programNode; // Children of the node
 protected:
     string nodeType; // The type of the node (e.g., "Expression", "Term", "Factor", etc.)
-    vector<unique_ptr<ASTNode>> children; // Children of the node
 };
 
-class ProgramNode : public ASTNode {
-public:
-    // Constructor
-    ProgramNode() : ASTNode(PROGRAM) {}
-};
 class StatementNode : public ASTNode {
 public:
-    explicit StatementNode() : ASTNode(STATEMENT) {}
+    StatementNode() : ASTNode(STATEMENT) {}
+    const string& getNodeType() const override;
+    void accept(Visitor* visitor) override;
 };
-class BlockNode : public ASTNode {
-public:
-    // Constructor
-    BlockNode() : ASTNode(BLOCK) {}
-};
-class FunctionDeclNode : public ASTNode {
-public:
-    FunctionDeclNode() : ASTNode(FUNCTION_DECL) {}
-};
-class FormalParamsNode : public ASTNode {
-public:
-    FormalParamsNode() : ASTNode(FORMAL_PARAMS) {}
-};
-class FormalParamNode : public ASTNode{
-public:
-    FormalParamNode() : ASTNode(FORMAL_PARAM) {}
-};
-class WhileStatementNode : public ASTNode{
-public:
-    WhileStatementNode() : ASTNode(WHILE_STATEMENT) {}
-};
-class ForStatementNode : public ASTNode{
-public:
-    ForStatementNode() : ASTNode(FOR_STATEMENT) {}
-};
-class IfStatementNode : public ASTNode  {
-public:
-    IfStatementNode() : ASTNode(IF_STATEMENT) {}
-};
-class RtrnStatementNode : public ASTNode{
-public:
-    RtrnStatementNode() : ASTNode(RETURN_STATEMENT) {}
-};
-
-class PixelStatementNode : public ASTNode {
-public:
-    PixelStatementNode() : ASTNode(PIXEL_STATEMENT) {
-        children.push_back(make_unique<ASTNode>(SPECIAL_PIXELR));
-        children.push_back(make_unique<ASTNode>(EXPRESSION));
-        children.push_back(make_unique<ASTNode>(SEMICOLON_TOKEN));
-        children.push_back(make_unique<ASTNode>(EXPRESSION));
-        children.push_back(make_unique<ASTNode>(SEMICOLON_TOKEN));
-        children.push_back(make_unique<ASTNode>(EXPRESSION));
-        children.push_back(make_unique<ASTNode>(SEMICOLON_TOKEN));
-        children.push_back(make_unique<ASTNode>(EXPRESSION));
-        children.push_back(make_unique<ASTNode>(SPECIAL_PIXEL));
-        children.push_back(make_unique<ASTNode>(EXPRESSION));
-        children.push_back(make_unique<ASTNode>(SEMICOLON_TOKEN));
-        children.push_back(make_unique<ASTNode>(EXPRESSION));
-        children.push_back(make_unique<ASTNode>(SEMICOLON_TOKEN));
-        children.push_back(make_unique<ASTNode>(EXPRESSION));
-    }
-};
-class DelayStatementNode : public ASTNode {
-public:
-    DelayStatementNode() : ASTNode(DELAY_STATEMENT) {}
-};
-class PrintStatementNode : public ASTNode {
-public:
-    PrintStatementNode() : ASTNode(PRINT_STATEMENT) {
-    }
-};
-class AssignmentNode : public ASTNode {
-public:
-    AssignmentNode() : ASTNode(ASSIGNMENT) {}
-};
-class VariableDeclNode : public ASTNode {
-public:
-    VariableDeclNode() : ASTNode(VARIABLE_DECL) {}
-};
-
-class ExpressionNode : public ASTNode {
-public:
-    ExpressionNode() : ASTNode(EXPRESSION) {}
-};
-class SimpleExpressionNode : public ASTNode {
-public:
-    SimpleExpressionNode() : ASTNode(SIMPLE_EXPRESSION) {}
-};
-class TermNode : public ASTNode{
-public:
-    TermNode() : ASTNode(TERM) {}
-};
-
 class FactorNode : public ASTNode {
 public:
     FactorNode() : ASTNode(FACTOR) {}
+    const string& getNodeType() const override;
+    void accept(Visitor* visitor) override;
 };
-class UnaryNode : public ASTNode{
+
+class TypeNode : public ASTNode{
 public:
-    UnaryNode() : ASTNode(UNARY) {}
+    TypeNode() : ASTNode(TYPE) {}
+    string value;
+    void accept(Visitor* visitor) override;
 };
-class SubExpressionNode : public ASTNode{
+class IdentifierNode : public FactorNode{
 public:
-    SubExpressionNode() : ASTNode(SUB_EXPRESSION) {}
+    string value;
+    IdentifierNode() : FactorNode() {}
+    void accept(Visitor* visitor) override;
+private:
+    string nodeType = IDENTIFIER;
 };
-class FunctionCallNode : public ASTNode {
+class RelationalOpNode : public ASTNode{
 public:
-    FunctionCallNode() : ASTNode(FUNCTION_CALL) {}
+    void accept(Visitor* visitor)override;
+    RelationalOpNode() : ASTNode(RELATIONAL_OP) {}
+    string value;
+};
+class AdditiveOpNode : public ASTNode{
+public:
+    void accept(Visitor* visitor) override;
+    AdditiveOpNode() : ASTNode(ADDITIVE_OP) {}
+    string value;
+};
+class MultiplicativeOpNode : public ASTNode{
+public:
+    void accept(Visitor* visitor) override;
+    MultiplicativeOpNode() : ASTNode(MULTIPLICATIVE_OP) {}
+    string value;
+};
+class LiteralNode : public FactorNode {
+public:
+    LiteralNode() : FactorNode() {}
+    void accept(Visitor* visitor) override;
+private:
+    string nodeType = LITERAL;
+};
+class BooleanLiteralNode : public LiteralNode{
+public:
+    void accept(Visitor* visitor) override;
+    BooleanLiteralNode() : LiteralNode() {}
+    string value;
+private:
+    string nodeType = BOOLEAN_LITERAL;
+};
+class IntegerLiteralNode : public LiteralNode{
+public:
+    void accept(Visitor* visitor) override;
+    IntegerLiteralNode() : LiteralNode() {}
+    string value;
+private:
+    string nodeType = INTEGER_LITERAL;
+};
+class FloatLiteralNode : public LiteralNode{
+public:
+    void accept(Visitor* visitor) override;
+    FloatLiteralNode() : LiteralNode() {}
+    string value;
+private:
+    string nodeType = FLOAT_LITERAL;
+};
+class ColourLiteralNode : public LiteralNode{
+public:
+    void accept(Visitor* visitor) override;
+    ColourLiteralNode() : LiteralNode() {}
+    string value;
+private:
+    string nodeType = COLOR_LITERAL;
+};
+class PadWidthNode : public LiteralNode{
+public:
+    void accept(Visitor* visitor) override;
+    PadWidthNode() : LiteralNode() {}
+private:
+    string nodeType = PAD_WIDTH;
+};
+class PadHeightNode : public LiteralNode{
+public:
+    void accept(Visitor* visitor) override;
+    PadHeightNode() : LiteralNode() {}
+private:
+    string nodeType = PAD_HEIGHT;
+};
+class PadReadNode : public LiteralNode {
+public:
+    void accept(Visitor* visitor) override;
+    PadReadNode() : LiteralNode() {}
+    tuple<unique_ptr<ExpressionNode>,unique_ptr<ExpressionNode>> expressions;
+private:
+    string nodeType = PAD_READ;
+};
+class PadRandINode : public FactorNode {
+public:
+    void accept(Visitor* visitor) override;
+    PadRandINode() : FactorNode() {}
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = PAD_RANDI;
 };
 class ActualParamsNode : public ASTNode{
 public:
+    void accept(Visitor* visitor) override;
     ActualParamsNode() : ASTNode(ACTUAL_PARAMS) {}
+    unique_ptr<ExpressionNode> leftExpression;
+    vector<unique_ptr<ExpressionNode>> rightExpressions;
 };
-class PadReadNode : public ASTNode {
+class FunctionCallNode : public FactorNode {
 public:
-    PadReadNode() : ASTNode(PAD_READ) {}
+    void accept(Visitor* visitor) override;
+    FunctionCallNode() : FactorNode() {}
+    unique_ptr<IdentifierNode> identifier;
+    unique_ptr<ActualParamsNode> actualParams = nullptr;
+private:
+    string nodeType = FUNCTION_CALL;
 };
-class PadRandINode : public ASTNode {
+class SubExpressionNode : public FactorNode{
 public:
-    PadRandINode() : ASTNode(PAD_RANDI) {}
+    void accept(Visitor* visitor) override;
+    SubExpressionNode() : FactorNode() {}
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = SUB_EXPRESSION;
 };
-class LiteralNode : public ASTNode {
+class UnaryNode : public FactorNode{
 public:
-    LiteralNode() : ASTNode(LITERAL) {}
+    void accept(Visitor* visitor) override;
+    UnaryNode() : FactorNode() {}
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = UNARY;
+};
+class TermNode : public ASTNode {
+public:
+    void accept(Visitor* visitor) override;
+    TermNode() : ASTNode(TERM) {}
+    unique_ptr<FactorNode> leftFactor;
+    vector<tuple<unique_ptr<MultiplicativeOpNode>,unique_ptr<FactorNode>>> rightFactor;
+};
+class SimpleExpressionNode : public ASTNode {
+public:
+    void accept(Visitor* visitor) override;
+    SimpleExpressionNode() : ASTNode(SIMPLE_EXPRESSION) {}
+    unique_ptr<TermNode> leftTerm;
+    vector<tuple<unique_ptr<AdditiveOpNode>,unique_ptr<TermNode>>> rightTerm;
+};
+class ExpressionNode : public ASTNode {
+public:
+    void accept(Visitor* visitor) override;
+    ExpressionNode() : ASTNode(EXPRESSION) {}
+    unique_ptr<SimpleExpressionNode> leftSimpleExpression;
+    vector<tuple<unique_ptr<RelationalOpNode>,unique_ptr<SimpleExpressionNode>>> rightSimpleExpression;
+};
+class AssignmentNode : public StatementNode {
+public:
+    void accept(Visitor* visitor) override;
+    AssignmentNode() : StatementNode() {}
+    unique_ptr<IdentifierNode> identifier;
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = ASSIGNMENT;
+};
+class VariableDeclNode : public StatementNode {
+public:
+    void accept(Visitor* visitor) override;
+    VariableDeclNode() : StatementNode() {}
+    unique_ptr<IdentifierNode> identifier;
+    unique_ptr<TypeNode> type;
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = VARIABLE_DECL;
+};
+class PrintStatementNode : public StatementNode {
+public:
+    void accept(Visitor* visitor) override;
+    PrintStatementNode() : StatementNode() {}
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = PRINT_STATEMENT;
+};
+class DelayStatementNode : public StatementNode {
+public:
+    void accept(Visitor* visitor) override;
+    DelayStatementNode() : StatementNode() {}
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = DELAY_STATEMENT;
+};
+class PixelStatementNode : public StatementNode {
+public:
+    void accept(Visitor* visitor) override;
+    PixelStatementNode() : StatementNode() {}
+    tuple<unique_ptr<ExpressionNode>,unique_ptr<ExpressionNode>,
+    unique_ptr<ExpressionNode>,unique_ptr<ExpressionNode>,unique_ptr<ExpressionNode>>
+    pixel_r = make_tuple(
+            unique_ptr<ExpressionNode>{nullptr}, unique_ptr<ExpressionNode>{nullptr},
+            unique_ptr<ExpressionNode>{nullptr}, unique_ptr<ExpressionNode>{nullptr},
+            unique_ptr<ExpressionNode>{nullptr});
+
+    tuple<unique_ptr<ExpressionNode>,unique_ptr<ExpressionNode>,
+            unique_ptr<ExpressionNode>> pixel = make_tuple(
+            unique_ptr<ExpressionNode>{nullptr}, unique_ptr<ExpressionNode>{nullptr},
+            unique_ptr<ExpressionNode>{nullptr});
+private:
+    string nodeType = PIXEL_STATEMENT;
+};
+class ForStatementNode : public StatementNode{
+public:
+    void accept(Visitor* visitor) override;
+    ForStatementNode() : StatementNode() {}
+    unique_ptr<VariableDeclNode> varDecl = nullptr;
+    unique_ptr<ExpressionNode> expression;
+    unique_ptr<AssignmentNode> assignment = nullptr;
+    unique_ptr<BlockNode> block;
+private:
+    string nodeType = FOR_STATEMENT;
+};
+class WhileStatementNode : public StatementNode{
+public:
+    void accept(Visitor* visitor) override;
+    WhileStatementNode() : StatementNode() {}
+    unique_ptr<ExpressionNode> expression;
+    unique_ptr<BlockNode> block;
+private:
+    string nodeType = WHILE_STATEMENT;
+};
+class IfStatementNode : public StatementNode  {
+public:
+    void accept(Visitor* visitor) override;
+    IfStatementNode() : StatementNode() {}
+    unique_ptr<ExpressionNode> expression;
+    unique_ptr<BlockNode> ifBlock;
+    unique_ptr<BlockNode> elseBlock = nullptr;
+private:
+    string nodeType = IF_STATEMENT;
+};
+class RtrnStatementNode : public StatementNode{
+public:
+    void accept(Visitor* visitor) override;
+    RtrnStatementNode() : StatementNode() {}
+    unique_ptr<ExpressionNode> expression;
+private:
+    string nodeType = RETURN_STATEMENT;
+};
+class FormalParamNode : public ASTNode{
+public:
+    void accept(Visitor* visitor) override;
+    FormalParamNode() : ASTNode(FORMAL_PARAM) {}
+    unique_ptr<IdentifierNode> identifier;
+    unique_ptr<TypeNode> type;
+};
+class FormalParamsNode : public ASTNode {
+public:
+    void accept(Visitor* visitor) override;
+    FormalParamsNode() : ASTNode(FORMAL_PARAMS) {}
+    unique_ptr<FormalParamNode> formalParamLeft;
+    vector<unique_ptr<FormalParamNode>>  formalParamRight;
+};
+class FunctionDeclNode : public StatementNode {
+public:
+    void accept(Visitor* visitor) override;
+    FunctionDeclNode() = default;
+    unique_ptr<IdentifierNode> identifier;
+    unique_ptr<FormalParamsNode> formalParams = nullptr;
+    unique_ptr<TypeNode> type;
+    unique_ptr<BlockNode> block;
+
+private:
+    string nodeType = FUNCTION_DECL;
+};
+class BlockNode : public StatementNode {
+public:
+    void accept(Visitor* visitor) override;
+    // Constructor
+    BlockNode() : StatementNode() {}
+    vector<unique_ptr<StatementNode>> statements;
+private:
+    string nodeType = BLOCK;
+};
+class ProgramNode : public ASTNode {
+public:
+    void accept(Visitor* visitor) override;
+    // Constructor
+    ProgramNode() : ASTNode(PROGRAM) {}
+    vector<unique_ptr<StatementNode>> statements;
 };
 
+class Visitor {
+public:
+    virtual void VisitNode(ASTNode* node) = 0;
+    virtual void VisitNode(ProgramNode* node) = 0;
+    virtual void VisitNode(StatementNode* node) = 0;
+    virtual void VisitNode(BlockNode* node) = 0;
+    virtual void VisitNode(FunctionDeclNode* node) = 0;
+    virtual void VisitNode(FormalParamsNode* node) = 0;
+    virtual void VisitNode(FormalParamNode* node) = 0;
+    virtual void VisitNode(WhileStatementNode* node) = 0;
+    virtual void VisitNode(ForStatementNode* node) = 0;
+    virtual void VisitNode(IfStatementNode* node) = 0;
+    virtual void VisitNode(RtrnStatementNode* node) = 0;
+    virtual void VisitNode(PixelStatementNode* node) = 0;
+    virtual void VisitNode(DelayStatementNode* node) = 0;
+    virtual void VisitNode(PrintStatementNode* node) = 0;
+    virtual void VisitNode(AssignmentNode* node) = 0;
+    virtual void VisitNode(VariableDeclNode* node) = 0;
+    virtual void VisitNode(ExpressionNode* node) = 0;
+    virtual void VisitNode(SimpleExpressionNode* node) = 0;
+    virtual void VisitNode(TermNode* node) = 0;
+    virtual void VisitNode(FactorNode* node) = 0;
+    virtual void VisitNode(UnaryNode* node) = 0;
+    virtual void VisitNode(SubExpressionNode* node) = 0;
+    virtual void VisitNode(FunctionCallNode* node) = 0;
+    virtual void VisitNode(ActualParamsNode* node) = 0;
+    virtual void VisitNode(PadRandINode* node) = 0;
+    virtual void VisitNode(PadReadNode* node) = 0;
+    virtual void VisitNode(LiteralNode* node) = 0;
+    virtual void VisitNode(IdentifierNode* node) = 0;
+    virtual void VisitNode(TypeNode* node) = 0;
+    virtual void VisitNode(RelationalOpNode* node) = 0;
+    virtual void VisitNode(AdditiveOpNode* node) = 0;
+    virtual void VisitNode(MultiplicativeOpNode* node) = 0;
+    virtual void VisitNode(BooleanLiteralNode* node) = 0;
+    virtual void VisitNode(IntegerLiteralNode* node) = 0;
+    virtual void VisitNode(FloatLiteralNode* node) = 0;
+    virtual void VisitNode(ColourLiteralNode* node) = 0;
+    virtual void VisitNode(PadWidthNode* node) = 0;
+    virtual void VisitNode(PadHeightNode* node) = 0;
+    // More visit methods for other node types
+
+};
 class Parser{
 public:
-    explicit Parser(vector<string> tk) : tokens(std::move(tk)) {}
-    unique_ptr<ASTNode> parseProgram();
+    explicit Parser(vector<string> tk, vector<string> words) :  tokens(std::move(tk)), words(std::move(words)) {}
+    unique_ptr<ProgramNode> parseProgram();
 private:
     vector<string> tokens;
+    vector<string> words;
     int currentToken = 0;
     string currentState = tokens[0];
     stack<string> myStack;
     void consumeToken(const string& expectedToken);
-    unique_ptr<ASTNode> parseProgramNode();
-    unique_ptr<ASTNode> parseStatementNode();
-    unique_ptr<ASTNode> parseBlockNode();
-    unique_ptr<ASTNode> parseFunctionDeclNode();
-    unique_ptr<ASTNode> parseFormalParamsNode();
-    unique_ptr<ASTNode> parseWhileStatementNode();
-    unique_ptr<ASTNode> parseForStatementNode();
-    static unique_ptr<ASTNode> parseFormalParamNode();
-    unique_ptr<ASTNode> parseIfStatementNode();
-    unique_ptr<ASTNode> parseRtrnStatementNode();
-    unique_ptr<ASTNode> parsePixelStatementNode();
-    unique_ptr<ASTNode> parseDelayStatementNode();
-    unique_ptr<ASTNode> parsePrintStatementNode();
-    unique_ptr<ASTNode> parseAssignmentNode();
-    unique_ptr<ASTNode> parseVariableDeclNode();
-    unique_ptr<ASTNode> parseExpressionNode();
-    unique_ptr<ASTNode> parseSimpleExpressionNode();
-    unique_ptr<ASTNode> parseTermNode();
-    unique_ptr<ASTNode> parseFactorNode();
-    unique_ptr<ASTNode> parseUnaryNode();
-    unique_ptr<ASTNode> parseSubExpressionNode();
-    unique_ptr<ASTNode> parseFunctionCallNode();
-    unique_ptr<ASTNode> parseActualParamsNode();
-    unique_ptr<ASTNode> parsePadReadNode();
-    unique_ptr<ASTNode> parsePadRandINode();
-    unique_ptr<ASTNode> parseLiteralNode();
+    unique_ptr<ProgramNode> parseProgramNode();
+    unique_ptr<StatementNode> parseStatementNode();
+    unique_ptr<BlockNode> parseBlockNode();
+    unique_ptr<FunctionDeclNode> parseFunctionDeclNode();
+    unique_ptr<FormalParamsNode> parseFormalParamsNode();
+    unique_ptr<WhileStatementNode> parseWhileStatementNode();
+    unique_ptr<ForStatementNode> parseForStatementNode();
+    unique_ptr<FormalParamNode> parseFormalParamNode();
+    unique_ptr<IfStatementNode> parseIfStatementNode();
+    unique_ptr<RtrnStatementNode> parseRtrnStatementNode();
+    unique_ptr<PixelStatementNode> parsePixelStatementNode();
+    unique_ptr<DelayStatementNode> parseDelayStatementNode();
+    unique_ptr<PrintStatementNode> parsePrintStatementNode();
+    unique_ptr<AssignmentNode> parseAssignmentNode();
+    unique_ptr<VariableDeclNode> parseVariableDeclNode();
+    unique_ptr<ExpressionNode> parseExpressionNode();
+    unique_ptr<SimpleExpressionNode> parseSimpleExpressionNode();
+    unique_ptr<TermNode> parseTermNode();
+    unique_ptr<FactorNode> parseFactorNode();
+    unique_ptr<UnaryNode> parseUnaryNode();
+    unique_ptr<SubExpressionNode> parseSubExpressionNode();
+    unique_ptr<FunctionCallNode> parseFunctionCallNode();
+    unique_ptr<ActualParamsNode> parseActualParamsNode();
+    unique_ptr<PadReadNode> parsePadReadNode();
+    unique_ptr<PadRandINode> parsePadRandINode();
+    unique_ptr<LiteralNode> parseLiteralNode();
+    unique_ptr<IdentifierNode> parseIdentifierNode();
+    unique_ptr<TypeNode> parseTypeNode();
+    unique_ptr<RelationalOpNode> parseRelationalOpNode();
+    unique_ptr<AdditiveOpNode> parseAdditiveOpNode();
+    unique_ptr<MultiplicativeOpNode> parseMultiplicativeOpNode();
+    unique_ptr<BooleanLiteralNode> parseBooleanLiteralNode();
+    unique_ptr<IntegerLiteralNode> parseIntegerLiteralNode();
+    unique_ptr<FloatLiteralNode> parseFloatLiteralNode();
+    unique_ptr<ColourLiteralNode> parseColourLiteralNode();
+    static unique_ptr<PadWidthNode> parsePadWidthNode();
+    static unique_ptr<PadHeightNode> parsePadHeightNode();
 };
 
 #endif //UNTITLED_PARSER_H

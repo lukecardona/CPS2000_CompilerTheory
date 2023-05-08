@@ -5,11 +5,164 @@
 const string &ASTNode::getNodeType() const {
     return nodeType;
 }
-void ASTNode::addChild(unique_ptr<ASTNode> child) {
-    children.push_back(std::move(child));
+const string& StatementNode::getNodeType() const{
+    return nodeType;
 }
-const vector<unique_ptr<ASTNode>> &ASTNode::getChildren() const {
-    return children;
+const string& FactorNode::getNodeType() const{
+    return nodeType;
+}
+
+//AcceptMethods
+void ASTNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void ProgramNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void StatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void BlockNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void FunctionDeclNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void FormalParamsNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void FormalParamNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void WhileStatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void ForStatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void IfStatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void RtrnStatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void PixelStatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void DelayStatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void PrintStatementNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void AssignmentNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void VariableDeclNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void ExpressionNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void SimpleExpressionNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void TermNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void FactorNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void UnaryNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void SubExpressionNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void FunctionCallNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void ActualParamsNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void PadRandINode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void PadReadNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void LiteralNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void IdentifierNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void TypeNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void RelationalOpNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void AdditiveOpNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void MultiplicativeOpNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void BooleanLiteralNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void IntegerLiteralNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void FloatLiteralNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void ColourLiteralNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void PadWidthNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
+}
+
+void PadHeightNode::accept(Visitor* visitor) {
+    visitor->VisitNode(this);
 }
 
 void Parser::consumeToken(const std::string &expectedToken) {
@@ -23,71 +176,70 @@ void Parser::consumeToken(const std::string &expectedToken) {
         terminate();
     }
 }
-
-unique_ptr<ASTNode> Parser::parseProgram() {
-    unique_ptr<ASTNode> children = std::move(parseProgramNode());
-    return std::move(children);
+unique_ptr<ProgramNode> Parser::parseProgram() {
+    unique_ptr<ProgramNode> program = std::move(parseProgramNode());
+    return std::move(program);
 }
-unique_ptr<ASTNode> Parser::parseProgramNode() {
+unique_ptr<ProgramNode> Parser::parseProgramNode() {
     unique_ptr<ProgramNode> programNode = make_unique<ProgramNode>();
     while(currentState != END_OF_FILE){
-        unique_ptr<ASTNode> statement = parseStatementNode();
-        if (statement->getNodeType() != NULL_PRODUCTION) {
-            programNode->addChild(std::move(statement));
+        unique_ptr<StatementNode> statement = parseStatementNode();
+        if ((statement->getNodeType() != NULL_PRODUCTION) && (statement != nullptr)) {
+            programNode->statements.push_back(std::move(statement));
         }
     }
     return std::move(programNode);
 }
-unique_ptr<ASTNode> Parser::parseStatementNode(){
+unique_ptr<StatementNode> Parser::parseStatementNode(){
     unique_ptr<StatementNode> statementNode = make_unique<StatementNode>();
     //Handle Block
     if (currentState == OPEN_CURLY_BRACKET_TOKEN){
-        unique_ptr<ASTNode> block = parseBlockNode();
+        unique_ptr<BlockNode> block = parseBlockNode();
         if (block) {
-            statementNode->addChild(std::move(block));
+            statementNode = std::move(block);
         } //If Block Returned was not empty
         return  std::move(statementNode);
     } //Current State
 
     //Handle FunctionDecl
     if (currentState == FUN_TOKEN){
-        unique_ptr<ASTNode> functionDecl = parseFunctionDeclNode();
-        statementNode->addChild(std::move(functionDecl));
+        unique_ptr<FunctionDeclNode> functionDecl = parseFunctionDeclNode();
+        statementNode = std::move(functionDecl);
         return std::move(statementNode);
     }
     //HandLe Return Statement
     if (currentState == RETURN_TOKEN){
-        unique_ptr<ASTNode> returnStatement = parseRtrnStatementNode();
-        statementNode->addChild(std::move(returnStatement));
+        unique_ptr<RtrnStatementNode> returnStatement = parseRtrnStatementNode();
+        statementNode = (std::move(returnStatement));
         consumeToken(SEMICOLON_TOKEN);
         //statementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
         return std::move(statementNode);
     }
     //Handle While Statement
     if (currentState == WHILE_TOKEN){
-        unique_ptr<ASTNode> whileStatement = parseWhileStatementNode();
-        statementNode->addChild(std::move(whileStatement));
+        unique_ptr<WhileStatementNode> whileStatement = parseWhileStatementNode();
+        statementNode = std::move(whileStatement);
         return std::move(statementNode);
     }
 
     //Handle For Statement
     if (currentState == FOR_TOKEN){
-        unique_ptr<ASTNode> forStatement = parseForStatementNode();
-        statementNode->addChild(std::move(forStatement));
+        unique_ptr<ForStatementNode> forStatement = parseForStatementNode();
+        statementNode = std::move(forStatement);
         return std::move(statementNode);
     }
 
     //Handle If Statement
     if (currentState == IF_TOKEN){
-        unique_ptr<ASTNode> ifStatement = parseIfStatementNode();
-        statementNode->addChild(std::move(ifStatement));
+        unique_ptr<IfStatementNode> ifStatement = parseIfStatementNode();
+        statementNode = std::move(ifStatement);
         return std::move(statementNode);
     }
 
     //Handle Pixel Statement
-    if (currentState == SPECIAL_PIXELR){
-        unique_ptr<ASTNode> pixelStatement = parsePixelStatementNode();
-        statementNode->addChild(std::move(pixelStatement));
+    if ((currentState == SPECIAL_PIXELR) || (currentState == SPECIAL_PIXEL)){
+        unique_ptr<PixelStatementNode> pixelStatement = parsePixelStatementNode();
+        statementNode = std::move(pixelStatement);
         consumeToken(SEMICOLON_TOKEN);
         //statementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
         return std::move(statementNode);
@@ -95,16 +247,16 @@ unique_ptr<ASTNode> Parser::parseStatementNode(){
 
     //Handle Delay Statement
     if (currentState == SPECIAL_DELAY){
-        unique_ptr<ASTNode> delayStatement = parseDelayStatementNode();
-        statementNode->addChild(std::move(delayStatement));
+        unique_ptr<DelayStatementNode> delayStatement = parseDelayStatementNode();
+        statementNode = std::move(delayStatement);
         consumeToken(SEMICOLON_TOKEN);
         //statementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
         return std::move(statementNode);
     }
     //Handle Print Statement
     if (currentState == SPECIAL_PRINT){
-        unique_ptr<ASTNode> printStatement = parsePrintStatementNode();
-        statementNode->addChild(std::move(printStatement));
+        unique_ptr<PrintStatementNode> printStatement = parsePrintStatementNode();
+        statementNode = std::move(printStatement);
         consumeToken(SEMICOLON_TOKEN);
         //statementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
         return std::move(statementNode);
@@ -112,8 +264,8 @@ unique_ptr<ASTNode> Parser::parseStatementNode(){
 
     //Handle Assignment
     if (currentState == IDENTIFIER){
-        unique_ptr<ASTNode> assignment = parseAssignmentNode();
-        statementNode->addChild(std::move(assignment));
+        unique_ptr<AssignmentNode> assignment = parseAssignmentNode();
+        statementNode = std::move(assignment);
         consumeToken(SEMICOLON_TOKEN);
         //statementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
         return std::move(statementNode);
@@ -121,398 +273,468 @@ unique_ptr<ASTNode> Parser::parseStatementNode(){
 
     //Handle Variable Declaration
     if (currentState == LET_TOKEN){
-        unique_ptr<ASTNode> variableDeclaration = parseVariableDeclNode();
-        statementNode->addChild(std::move(variableDeclaration));
+        unique_ptr<VariableDeclNode> variableDeclaration = parseVariableDeclNode();
+        statementNode = std::move(variableDeclaration);
         consumeToken(SEMICOLON_TOKEN);
         //statementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
         return std::move(statementNode);
     }
 
-    return std::move(make_unique<ASTNode>(NULL_PRODUCTION));
+    unique_ptr<StatementNode> myPtr(nullptr);
+    return std::move(myPtr);
 }
-unique_ptr<ASTNode> Parser::parseBlockNode(){
+unique_ptr<BlockNode> Parser::parseBlockNode(){
     unique_ptr<BlockNode> block = make_unique<BlockNode>();
     consumeToken(OPEN_CURLY_BRACKET_TOKEN); //Expect Open Brackets
     while (currentState != CLOSE_CURLY_BRACKET_TOKEN) { //Handle One or multiple statements
-        block->addChild(std::move(parseStatementNode()));
+        block->statements.push_back(std::move(parseStatementNode()));
     }
     consumeToken(CLOSE_CURLY_BRACKET_TOKEN);
     return std::move(block);
 }
-unique_ptr<ASTNode> Parser::parseFunctionDeclNode(){
+unique_ptr<FunctionDeclNode> Parser::parseFunctionDeclNode(){
     unique_ptr<FunctionDeclNode> functionDeclNode = make_unique<FunctionDeclNode>();
 
     consumeToken(FUN_TOKEN);
-    consumeToken(IDENTIFIER);
+
+    functionDeclNode->identifier = std::move(parseIdentifierNode());
+
     consumeToken(OPEN_BRACKET_TOKEN);
+
     if(currentState == IDENTIFIER){
-        functionDeclNode->addChild(std::move(parseFormalParamsNode()));
+        functionDeclNode->formalParams = std::move(parseFormalParamsNode());
     }
+
     consumeToken(CLOSE_BRACKET_TOKEN);
     consumeToken("->");
-    consumeToken(TYPE);
-    functionDeclNode->addChild(std::move(parseBlockNode()));
+
+    functionDeclNode->type = std::move(parseTypeNode());
+
+    functionDeclNode->block = std::move(parseBlockNode());
+
     return std::move(functionDeclNode);
 }
-unique_ptr<ASTNode> Parser::parseFormalParamsNode(){
+unique_ptr<FormalParamsNode> Parser::parseFormalParamsNode(){
     unique_ptr<FormalParamsNode> formalParamsNode = make_unique<FormalParamsNode>();
-    formalParamsNode->addChild(std::move(parseFormalParamNode()));
+    formalParamsNode->formalParamLeft = std::move(parseFormalParamNode());
     while (currentState == COMMA_TOKEN){
         consumeToken(COMMA_TOKEN);
-        formalParamsNode->addChild(make_unique<ASTNode>(COMMA_TOKEN));
-        formalParamsNode->addChild(std::move(parseFormalParamNode()));
+        formalParamsNode->formalParamRight.push_back(std::move(parseFormalParamNode()));
     }
     return std::move(formalParamsNode);
 }
-unique_ptr<ASTNode> Parser::parseFormalParamNode(){
+unique_ptr<FormalParamNode> Parser::parseFormalParamNode(){
     unique_ptr<FormalParamNode> formalParamNode = make_unique<FormalParamNode>();
+    formalParamNode->identifier = parseIdentifierNode();
+    formalParamNode->type = parseTypeNode();
     return std::move(formalParamNode);
 }
-unique_ptr<ASTNode> Parser::parseWhileStatementNode(){
+unique_ptr<WhileStatementNode> Parser::parseWhileStatementNode(){
     unique_ptr<WhileStatementNode> whileStatementNode = make_unique<WhileStatementNode>();
     consumeToken(WHILE_TOKEN);
-    whileStatementNode->addChild(make_unique<ASTNode>(WHILE_TOKEN));
     consumeToken(OPEN_BRACKET_TOKEN);
-    whileStatementNode->addChild(make_unique<ASTNode>(OPEN_BRACKET_TOKEN));
-    whileStatementNode->addChild(std::move(parseExpressionNode()));
+    whileStatementNode->expression = std::move(parseExpressionNode());
     consumeToken(CLOSE_BRACKET_TOKEN);
-    whileStatementNode->addChild(make_unique<ASTNode>(CLOSE_BRACKET_TOKEN));
-    whileStatementNode->addChild(std::move(parseBlockNode()));
+    whileStatementNode->block = std::move(parseBlockNode());
     return std::move(whileStatementNode);
 }
-unique_ptr<ASTNode> Parser::parseForStatementNode(){
+unique_ptr<ForStatementNode> Parser::parseForStatementNode(){
     unique_ptr<ForStatementNode> forStatementNode = make_unique<ForStatementNode>();
     consumeToken(FOR_TOKEN);
-    forStatementNode->addChild(make_unique<ASTNode>(FOR_TOKEN));
-
     consumeToken(OPEN_BRACKET_TOKEN);
-    forStatementNode->addChild(make_unique<ASTNode>(OPEN_BRACKET_TOKEN));
-
     if(currentState == LET_TOKEN){
-        forStatementNode->addChild(std::move(parseVariableDeclNode()));
+        forStatementNode->varDecl = std::move(parseVariableDeclNode());
     }
 
     consumeToken(SEMICOLON_TOKEN);
-    forStatementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
 
-    forStatementNode->addChild(std::move(parseExpressionNode()));
+    forStatementNode->expression = std::move(parseExpressionNode());
 
     consumeToken(SEMICOLON_TOKEN);
-    forStatementNode->addChild(make_unique<ASTNode>(SEMICOLON_TOKEN));
 
     if(currentState == IDENTIFIER){
-        forStatementNode->addChild(std::move(parseAssignmentNode()));
+        forStatementNode->assignment = std::move(parseAssignmentNode());
     }
 
     consumeToken(CLOSE_BRACKET_TOKEN);
-    forStatementNode->addChild(make_unique<ASTNode>(CLOSE_BRACKET_TOKEN));
 
-    forStatementNode->addChild(std::move(parseBlockNode()));
+    forStatementNode->block = std::move(parseBlockNode());
 
     return std::move(forStatementNode);
 }
-unique_ptr<ASTNode> Parser::parseIfStatementNode(){
+unique_ptr<IfStatementNode> Parser::parseIfStatementNode(){
     unique_ptr<IfStatementNode> ifStatementNode = make_unique<IfStatementNode>();
 
     consumeToken(IF_TOKEN);
-    ifStatementNode->addChild(make_unique<ASTNode>(IF_TOKEN));
 
     consumeToken(OPEN_BRACKET_TOKEN);
-    ifStatementNode->addChild(make_unique<ASTNode>(OPEN_BRACKET_TOKEN));
 
-    ifStatementNode->addChild(std::move(parseExpressionNode()));
+    ifStatementNode->expression = std::move(parseExpressionNode());
 
     consumeToken(CLOSE_BRACKET_TOKEN);
-    ifStatementNode->addChild(make_unique<ASTNode>(CLOSE_BRACKET_TOKEN));
 
     if(currentState == ELSE_TOKEN){
 
         consumeToken(ELSE_TOKEN);
-        ifStatementNode->addChild(make_unique<ASTNode>(ELSE_TOKEN));
+        ifStatementNode->elseBlock = std::move(parseBlockNode());
 
-        ifStatementNode->addChild(std::move(parseBlockNode()));
         return std::move(ifStatementNode);
     }else{
         return std::move(ifStatementNode);
     }
 }
-unique_ptr<ASTNode> Parser::parseRtrnStatementNode(){
+unique_ptr<RtrnStatementNode> Parser::parseRtrnStatementNode(){
     unique_ptr<RtrnStatementNode> returnStatementNode = make_unique<RtrnStatementNode>();
 
     consumeToken(RETURN_TOKEN);
-    returnStatementNode->addChild(make_unique<ASTNode>(RETURN_TOKEN));
-
-    returnStatementNode->addChild(std::move(parseExpressionNode()));
+    returnStatementNode->expression = std::move(parseExpressionNode());
 
     return std::move(returnStatementNode);
 }
-unique_ptr<ASTNode> Parser::parsePixelStatementNode(){
+unique_ptr<PixelStatementNode> Parser::parsePixelStatementNode(){
     unique_ptr<PixelStatementNode> pixelStatementNode = make_unique<PixelStatementNode>();
 
-    consumeToken(SPECIAL_PIXELR);
-    pixelStatementNode->addChild(make_unique<ASTNode>(SPECIAL_PIXELR));
+    if(currentState == SPECIAL_PIXELR) {
+        consumeToken(SPECIAL_PIXELR);
 
-    pixelStatementNode->addChild(std::move(parseExpressionNode()));
-    consumeToken(COMMA_TOKEN);
-    pixelStatementNode->addChild(make_unique<ASTNode>(COMMA_TOKEN));
+        get<0>(pixelStatementNode->pixel_r) = std::move(parseExpressionNode());
+        consumeToken(COMMA_TOKEN);
 
-    pixelStatementNode->addChild(std::move(parseExpressionNode()));
-    consumeToken(COMMA_TOKEN);
-    pixelStatementNode->addChild(make_unique<ASTNode>(COMMA_TOKEN));
+        get<1>(pixelStatementNode->pixel_r) = std::move(parseExpressionNode());
+        consumeToken(COMMA_TOKEN);
 
-    pixelStatementNode->addChild(std::move(parseExpressionNode()));
-    consumeToken(COMMA_TOKEN);
-    pixelStatementNode->addChild(make_unique<ASTNode>(COMMA_TOKEN));
+        get<2>(pixelStatementNode->pixel_r) = std::move(parseExpressionNode());
+        consumeToken(COMMA_TOKEN);
 
-    pixelStatementNode->addChild(std::move(parseExpressionNode()));
-    consumeToken(COMMA_TOKEN);
-    pixelStatementNode->addChild(make_unique<ASTNode>(COMMA_TOKEN));
+        get<3>(pixelStatementNode->pixel_r) = std::move(parseExpressionNode());
+        consumeToken(COMMA_TOKEN);
 
-    pixelStatementNode->addChild(std::move(parseExpressionNode()));
+        get<4>(pixelStatementNode->pixel_r) = std::move(parseExpressionNode());
+    }
+
+    if(currentState == SPECIAL_PIXEL){
+        get<0>(pixelStatementNode->pixel) = std::move(parseExpressionNode());
+        consumeToken(COMMA_TOKEN);
+
+        get<1>(pixelStatementNode->pixel) = std::move(parseExpressionNode());
+        consumeToken(COMMA_TOKEN);
+
+        get<2>(pixelStatementNode->pixel) = std::move(parseExpressionNode());
+    }
 
     return std::move(pixelStatementNode);
 }
-unique_ptr<ASTNode> Parser::parseDelayStatementNode(){
+unique_ptr<DelayStatementNode> Parser::parseDelayStatementNode(){
     unique_ptr<DelayStatementNode> delayStatementNode = make_unique<DelayStatementNode>();
 
     consumeToken(SPECIAL_DELAY);
-    delayStatementNode->addChild(make_unique<ASTNode>(SPECIAL_DELAY));
 
-    delayStatementNode->addChild(std::move(parseExpressionNode()));
+    delayStatementNode->expression = std::move(parseExpressionNode());
     return std::move(delayStatementNode);
 }
-unique_ptr<ASTNode> Parser::parsePrintStatementNode(){
+unique_ptr<PrintStatementNode> Parser::parsePrintStatementNode(){
     unique_ptr<PrintStatementNode> printStatementNode = make_unique<PrintStatementNode>();
 
     consumeToken(SPECIAL_PRINT);
-    printStatementNode->addChild(make_unique<ASTNode>(SPECIAL_PRINT));
 
-    printStatementNode->addChild(std::move(parseExpressionNode()));
+    printStatementNode->expression = std::move(parseExpressionNode());
     return std::move(printStatementNode);
 }
-unique_ptr<ASTNode> Parser::parseAssignmentNode(){
+unique_ptr<AssignmentNode> Parser::parseAssignmentNode(){
     unique_ptr<AssignmentNode> assignmentNode = make_unique<AssignmentNode>();
 
-    consumeToken(IDENTIFIER);
-    assignmentNode->addChild(make_unique<ASTNode>(IDENTIFIER));
+    assignmentNode->identifier = std::move(parseIdentifierNode());
 
     consumeToken(EQUALS_TOKEN);
-    assignmentNode->addChild(make_unique<ASTNode>(EQUALS_TOKEN));
 
-    assignmentNode->addChild(std::move(parseExpressionNode()));
+    assignmentNode->expression = std::move(parseExpressionNode());
 
     return std::move(assignmentNode);
 }
-unique_ptr<ASTNode> Parser::parseVariableDeclNode(){
+unique_ptr<VariableDeclNode> Parser::parseVariableDeclNode(){
     unique_ptr<VariableDeclNode> variableDeclNode = make_unique<VariableDeclNode>();
 
     consumeToken(LET_TOKEN);
     //variableDeclNode->addChild(make_unique<ASTNode>(LET_TOKEN));
 
-    consumeToken(IDENTIFIER);
-    variableDeclNode->addChild(make_unique<ASTNode>(IDENTIFIER));
+    variableDeclNode->identifier = std::move(parseIdentifierNode());
 
     consumeToken(COLON_TOKEN);
-    //variableDeclNode->addChild(make_unique<ASTNode>(COLON_TOKEN));
 
-    consumeToken(TYPE);
-    variableDeclNode->addChild(make_unique<ASTNode>(TYPE));
+    variableDeclNode->type = std::move(parseTypeNode());
 
     consumeToken(EQUALS_TOKEN);
-    variableDeclNode->addChild(make_unique<ASTNode>(EQUALS_TOKEN));
 
-    variableDeclNode->addChild(std::move(parseExpressionNode()));
+    variableDeclNode->expression = std::move(parseExpressionNode());
 
     return std::move(variableDeclNode);
 }
-unique_ptr<ASTNode> Parser::parseExpressionNode(){
+unique_ptr<ExpressionNode> Parser::parseExpressionNode(){
     unique_ptr<ExpressionNode> expressionNode = make_unique<ExpressionNode>();
 
-    expressionNode->addChild(std::move(parseSimpleExpressionNode()));
+    expressionNode->leftSimpleExpression = std::move(parseSimpleExpressionNode());
 
     while(currentState == RELATIONAL_OP){
-        consumeToken(RELATIONAL_OP);
-        expressionNode->addChild(make_unique<ASTNode>(RELATIONAL_OP));
-
-        expressionNode->addChild(std::move(parseSimpleExpressionNode()));
+        unique_ptr<RelationalOpNode> relOp = std::move(parseRelationalOpNode());
+        unique_ptr<SimpleExpressionNode> simp = std::move(parseSimpleExpressionNode());
+        expressionNode->rightSimpleExpression.emplace_back(std::move(relOp),
+                                                           std::move(simp));
     }
     return std::move(expressionNode);
 }
-unique_ptr<ASTNode> Parser::parseSimpleExpressionNode(){
+unique_ptr<SimpleExpressionNode> Parser::parseSimpleExpressionNode(){
     unique_ptr<SimpleExpressionNode> simpleExpressionNode = make_unique<SimpleExpressionNode>();
 
-    simpleExpressionNode->addChild(std::move(parseTermNode()));
+    simpleExpressionNode->leftTerm = std::move(parseTermNode());
 
     while(currentState == ADDITIVE_OP){
-        consumeToken(ADDITIVE_OP);
-        simpleExpressionNode->addChild(make_unique<ASTNode>(ADDITIVE_OP));
-
-        simpleExpressionNode->addChild(std::move(parseTermNode()));
+        unique_ptr<AdditiveOpNode> additiveOp= std::move(parseAdditiveOpNode());
+        unique_ptr<TermNode> termNode = std::move(parseTermNode());
+        simpleExpressionNode->rightTerm.emplace_back(std::move(additiveOp),
+                                                     std::move(termNode));
     }
     return std::move(simpleExpressionNode);
 }
-unique_ptr<ASTNode> Parser::parseTermNode(){
+unique_ptr<TermNode> Parser::parseTermNode(){
     unique_ptr<TermNode> termNode = make_unique<TermNode>();
 
-    termNode->addChild(std::move(parseFactorNode()));
+    termNode->leftFactor = std::move(parseFactorNode());
 
     while(currentState == MULTIPLICATIVE_OP){
-        consumeToken(MULTIPLICATIVE_OP);
-        termNode->addChild(make_unique<ASTNode>(MULTIPLICATIVE_OP));
-
-        termNode->addChild(std::move(parseFactorNode()));
+        unique_ptr<MultiplicativeOpNode> multOp = std::move(parseMultiplicativeOpNode());
+        unique_ptr<FactorNode> factorNode = std::move(parseFactorNode());
+        termNode->rightFactor.emplace_back(std::move(multOp),
+                                                     std::move(factorNode));
     }
     return std::move(termNode);
 }
-unique_ptr<ASTNode> Parser::parseFactorNode(){
+unique_ptr<FactorNode> Parser::parseFactorNode(){
     unique_ptr<FactorNode> factorNode = make_unique<FactorNode>();
 
-    if ((currentState == IDENTIFIER) || (currentState == PAD_WIDTH) || (currentState == PAD_HEIGHT)){
-        factorNode->addChild(make_unique<ASTNode>(currentState));
-        consumeToken(currentState);
+    if ((currentState == IDENTIFIER) && (tokens[currentToken+1] != OPEN_BRACKET_TOKEN)){
+        factorNode = std::move(parseIdentifierNode());
         return std::move(factorNode);
     }
 
+    if((currentState == PAD_WIDTH) || (currentState == PAD_HEIGHT)){
+
+    }
+
     if ((currentState == ADDITIVE_OP) || (currentState == "not")){
-        factorNode->addChild(std::move(parseUnaryNode()));
+        factorNode = std::move(parseUnaryNode());
         return std::move(factorNode);
     }
 
     if ((currentState == IDENTIFIER)){
-        factorNode->addChild(std::move(parseFunctionCallNode()));
+        factorNode = std::move(parseFunctionCallNode());
         return std::move(factorNode);
     }
 
     if((currentState == OPEN_BRACKET_TOKEN)){
-        factorNode->addChild(std::move(parseSubExpressionNode()));
+        factorNode = std::move(parseSubExpressionNode());
         return std::move(factorNode);
     }
 
     if(currentState == SPECIAL_RANDI){
-        factorNode->addChild(std::move(parsePadRandINode()));
+        factorNode = std::move(parsePadRandINode());
         return std::move(factorNode);
     }
 
     if(currentState == SPECIAL_READ){
-        factorNode->addChild(std::move(parsePadReadNode()));
+        factorNode = std::move(parsePadReadNode());
         return std::move(factorNode);
     }
 
     //Deal With Literals
     if ((currentState == BOOLEAN_LITERAL) || (currentState == INTEGER_LITERAL) || (currentState == FLOAT_LITERAL) ||
         (currentState == COLOR_LITERAL) || (currentState == PAD_WIDTH) || (currentState == PAD_HEIGHT) || (currentState == SPECIAL_READ)){
-        factorNode->addChild(std::move(parseLiteralNode()));
+        factorNode = std::move(parseLiteralNode());
         return std::move(factorNode);
     }
 
-    return std::move(make_unique<ASTNode>(NULL_PRODUCTION));;
+    unique_ptr<FactorNode> myPtr(nullptr);
+    return std::move(myPtr);
 }
-unique_ptr<ASTNode> Parser::parseUnaryNode(){
+unique_ptr<UnaryNode> Parser::parseUnaryNode(){
     unique_ptr<UnaryNode> unaryNode = make_unique<UnaryNode>();
 
     if ((currentState == ADDITIVE_OP)){
         consumeToken(ADDITIVE_OP);
-        unaryNode->addChild(make_unique<ASTNode>("-"));
 
-        unaryNode->addChild(std::move(parseExpressionNode()));
+        unaryNode->expression = std::move(parseExpressionNode());
         return std::move(unaryNode);
     }
 
     if ((currentState == "not")){
         consumeToken("not");
-        unaryNode->addChild(make_unique<ASTNode>("not"));
 
-        unaryNode->addChild(std::move(parseExpressionNode()));
+        unaryNode->expression = std::move(parseExpressionNode());
         return std::move(unaryNode);
     }
 
-    return std::move(make_unique<ASTNode>(NULL_PRODUCTION)); //Should never be here
+    unique_ptr<UnaryNode> myPtr(nullptr);
+    return std::move(myPtr); //Should never be here
 }
-unique_ptr<ASTNode> Parser::parseSubExpressionNode(){
+unique_ptr<SubExpressionNode> Parser::parseSubExpressionNode(){
     unique_ptr<SubExpressionNode> subExpressionNode = make_unique<SubExpressionNode>();
 
     consumeToken(OPEN_BRACKET_TOKEN);
-    subExpressionNode->addChild(make_unique<ASTNode>(OPEN_BRACKET_TOKEN));
 
-    subExpressionNode->addChild(std::move(parseExpressionNode()));
+    subExpressionNode->expression = std::move(parseExpressionNode());
 
     consumeToken(CLOSE_BRACKET_TOKEN);
-    subExpressionNode->addChild(make_unique<ASTNode>(CLOSE_BRACKET_TOKEN));
 
     return std::move(subExpressionNode);
 }
-unique_ptr<ASTNode> Parser::parsePadReadNode(){
+unique_ptr<PadReadNode> Parser::parsePadReadNode(){
     unique_ptr<PadReadNode> padReadNode = make_unique<PadReadNode>();
 
     consumeToken(SPECIAL_READ);
-    padReadNode->addChild(make_unique<ASTNode>(SPECIAL_READ));
 
-    padReadNode->addChild(std::move(parseExpressionNode()));
+    get<0>(padReadNode->expressions) = std::move(parseExpressionNode());
     consumeToken(COMMA_TOKEN);
-    padReadNode->addChild(make_unique<ASTNode>(COMMA_TOKEN));
 
-    padReadNode->addChild(std::move(parseExpressionNode()));
+    get<1>(padReadNode->expressions) = std::move(parseExpressionNode());
     return std::move(padReadNode);
 }
-unique_ptr<ASTNode> Parser::parsePadRandINode(){
+unique_ptr<PadRandINode> Parser::parsePadRandINode(){
     unique_ptr<PadRandINode> padRandINode = make_unique<PadRandINode>();
 
     consumeToken(SPECIAL_RANDI);
-    padRandINode->addChild(make_unique<ASTNode>(SPECIAL_RANDI));
 
-    padRandINode->addChild(std::move(parseExpressionNode()));
+    padRandINode->expression = std::move(parseExpressionNode());
 
     return std::move(padRandINode);
 }
-unique_ptr<ASTNode> Parser::parseLiteralNode(){
+unique_ptr<LiteralNode> Parser::parseLiteralNode(){
     unique_ptr<LiteralNode> literalNode = make_unique<LiteralNode>();
 
-    if ((currentState == BOOLEAN_LITERAL) || (currentState == INTEGER_LITERAL) || (currentState == FLOAT_LITERAL) ||
-        (currentState == COLOR_LITERAL) || (currentState == PAD_WIDTH) || (currentState == PAD_HEIGHT)){
-        literalNode->addChild(make_unique<ASTNode>(currentState));
-        consumeToken(currentState);
+    if (currentState == BOOLEAN_LITERAL){
+        literalNode = std::move(parseBooleanLiteralNode());
         return std::move(literalNode);
     }
+    if(currentState == INTEGER_LITERAL){
+        literalNode = std::move(parseIntegerLiteralNode());
+        return std::move(literalNode);
+    }
+    if(currentState == FLOAT_LITERAL){
+        literalNode = std::move(parseFloatLiteralNode());
+        return std::move(literalNode);
+    }
+    if(currentState == COLOR_LITERAL){
+        literalNode = std::move(parseColourLiteralNode());
+        return std::move(literalNode);
+    }
+    if(currentState == PAD_WIDTH){
+        literalNode = std::move(parsePadWidthNode());
+        return std::move(literalNode);
 
+    }
+    if(currentState == PAD_HEIGHT){
+        literalNode = std::move(parsePadHeightNode());
+        return std::move(literalNode);
+    }
     if(currentState == SPECIAL_READ){
-        literalNode->addChild(std::move(parsePadReadNode()));
+        literalNode = std::move(parsePadReadNode());
         return std::move(literalNode);
     }
 
     cerr << "\033[1;31m Literal Expected, found" << currentState << " instead \033[0m";
     terminate();
-    return std::move(make_unique<ASTNode>(NULL_PRODUCTION));
 }
-unique_ptr<ASTNode> Parser::parseActualParamsNode(){
+
+unique_ptr<ActualParamsNode> Parser::parseActualParamsNode(){
     unique_ptr<ActualParamsNode> actualParamsNode = make_unique<ActualParamsNode>();
 
-    actualParamsNode->addChild(std::move(parseExpressionNode()));
+    actualParamsNode->leftExpression = std::move(parseExpressionNode());
 
-    if(currentState == COMMA_TOKEN){
+    while(currentState == COMMA_TOKEN){
         consumeToken(COMMA_TOKEN);
-        actualParamsNode->addChild(make_unique<ASTNode>(COMMA_TOKEN));
-
-        actualParamsNode->addChild(std::move(parseExpressionNode()));
+        actualParamsNode->rightExpressions.emplace_back(std::move(parseExpressionNode()));
     }
 
     return std::move(actualParamsNode);
 }
-unique_ptr<ASTNode> Parser::parseFunctionCallNode(){
+unique_ptr<FunctionCallNode> Parser::parseFunctionCallNode(){
     unique_ptr<FunctionCallNode> functionCallNode = make_unique<FunctionCallNode>();
 
-    consumeToken(IDENTIFIER);
-    functionCallNode->addChild(make_unique<ASTNode>(IDENTIFIER));
+    functionCallNode->identifier = std::move(parseIdentifierNode());
 
     consumeToken(OPEN_BRACKET_TOKEN);
-//      functionCallNode->addChild(make_unique<ASTNode>(OPEN_BRACKET_TOKEN));
 
-    unique_ptr<ASTNode> actualParamsNode = std::move(parseActualParamsNode());
-    if(actualParamsNode){
-        functionCallNode->addChild(std::move(actualParamsNode));
+    if(tokens[currentToken+1] != CLOSE_BRACKET_TOKEN){
+        functionCallNode->actualParams = std::move(parseActualParamsNode());
+        if (functionCallNode->actualParams == nullptr){
+            cerr << "\033[1;31m PARSING ERROR: Parsing error with Function Call \033[0m";
+        }
     }
 
     consumeToken(CLOSE_BRACKET_TOKEN);
     //functionCallNode->addChild(make_unique<ASTNode>(CLOSE_BRACKET_TOKEN));
 
     return std::move(functionCallNode);
+}
+
+
+unique_ptr<IdentifierNode> Parser::parseIdentifierNode(){
+    unique_ptr<IdentifierNode> identifierNode = make_unique<IdentifierNode>();
+    identifierNode->value = words[currentToken];
+    consumeToken(IDENTIFIER);
+    return std::move(identifierNode);
+}
+unique_ptr<TypeNode> Parser::parseTypeNode(){
+    unique_ptr<TypeNode> node = make_unique<TypeNode>();
+    node->value = words[currentToken];
+    consumeToken(TYPE);
+    return std::move(node);
+}
+unique_ptr<RelationalOpNode> Parser::parseRelationalOpNode(){
+    unique_ptr<RelationalOpNode> node = make_unique<RelationalOpNode>();
+    node->value = words[currentToken];
+    consumeToken(RELATIONAL_OP);
+    return std::move(node);
+}
+unique_ptr<AdditiveOpNode> Parser::parseAdditiveOpNode(){
+    unique_ptr<AdditiveOpNode> node = make_unique<AdditiveOpNode>();
+    node->value = words[currentToken];
+    consumeToken(ADDITIVE_OP);
+    return std::move(node);
+}
+unique_ptr<MultiplicativeOpNode> Parser::parseMultiplicativeOpNode(){
+    unique_ptr<MultiplicativeOpNode> node = make_unique<MultiplicativeOpNode>();
+    node->value = words[currentToken];
+    consumeToken(MULTIPLICATIVE_OP);
+    return std::move(node);
+}
+unique_ptr<BooleanLiteralNode> Parser::parseBooleanLiteralNode(){
+    unique_ptr<BooleanLiteralNode> node = make_unique<BooleanLiteralNode>();
+    node->value = words[currentToken];
+    consumeToken(BOOLEAN_LITERAL);
+    return std::move(node);
+}
+unique_ptr<IntegerLiteralNode> Parser::parseIntegerLiteralNode(){
+    unique_ptr<IntegerLiteralNode> node = make_unique<IntegerLiteralNode>();
+    node->value = words[currentToken];
+    consumeToken(INTEGER_LITERAL);
+    return std::move(node);
+}
+unique_ptr<FloatLiteralNode> Parser::parseFloatLiteralNode(){
+    unique_ptr<FloatLiteralNode> node = make_unique<FloatLiteralNode>();
+    node->value = words[currentToken];
+    consumeToken(FLOAT_LITERAL);
+    return std::move(node);
+}
+unique_ptr<ColourLiteralNode> Parser::parseColourLiteralNode(){
+    unique_ptr<ColourLiteralNode> node = make_unique<ColourLiteralNode>();
+    node->value = words[currentToken];
+    consumeToken(COLOR_LITERAL);
+    return std::move(node);
+}
+unique_ptr<PadWidthNode> Parser::parsePadWidthNode(){
+    unique_ptr<PadWidthNode> node = make_unique<PadWidthNode>();
+    return std::move(node);
+}
+unique_ptr<PadHeightNode> Parser::parsePadHeightNode(){
+    unique_ptr<PadHeightNode> node = make_unique<PadHeightNode>();
+    return std::move(node);
 }

@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "ErrorHandling.h"
 
+
 //Function to split the vector into data
 std::vector<std::string> split(const std::string &s, char delimiter) { //Custom Function
     std::vector<std::string> tokens;
