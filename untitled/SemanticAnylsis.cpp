@@ -1,5 +1,7 @@
 #include <unordered_map>
-#include "parser.h"
+#include "XMLGenerator.h"
+
+#define BOOL "bool"
 
 #define FUNCTION_TYPE "<Function>"
 
@@ -14,7 +16,12 @@ public:
     }
 
     bool isDefinedInCurrentScope(const string &name) const {
-        return symbolTable.back().find(name) != symbolTable.back().end();
+        for (const auto &scope : symbolTable) {
+            if (scope.find(name) != scope.end()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void define(const string &name, const string &type) {
@@ -23,7 +30,8 @@ public:
 
     string lookup(const std::string &name) const {
         for (const auto &scope: symbolTable) {
-            auto it = scope.find(name);
+
+   auto it = scope.find(name);
             if (it != scope.end()) {
                 return it->second;
             }
@@ -36,18 +44,17 @@ private:
     vector<unordered_map<string,string>> symbolTable;
 
 };
-
 class SemaniticVisitor : public Visitor{
 public:
     void VisitNode(ASTNode* node) override {
         node->programNode->accept(this);
     }
     void VisitNode(ProgramNode* node) override {
+        symbolTable.enterScope();
         for (const unique_ptr<StatementNode>& statement : node->statements) {
-            symbolTable.enterScope();
             statement->accept(this);
-            symbolTable.exitScope();
         }
+        symbolTable.exitScope();
     }
     void VisitNode(StatementNode* node) override {
         node->accept(this);
@@ -61,28 +68,30 @@ public:
         string varName = node->identifier->value;
         string type = "<Function type= '"+node->type->value+"'>";
 
-        //Check that the variable is not already declared
-        if(symbolTable.lookup(varName).empty()){
-            //Not Found -> Add declaration
-            symbolTable.define(varName,type);
+        if(symbolTable.isDefinedInCurrentScope(varName)){
+            //Found -> Already Declared
+            throw runtime_error("\033[1;31m Variable '" + varName + "' already declared \033[0m");
         }else{
-            //Found
-            throw std::runtime_error("\033[1;31m Variable '" + varName + "' already declared \033[0m");
+            //Not Found
+            symbolTable.define(varName,type);
         }
 
         symbolTable.enterScope();
+        inAFunction = true;
 
         if(node->formalParams){
             node->formalParams->accept(this);
         }
 
         node->block->accept(this);
-        if(symbolTable.lastExpressionType != type){
-            throw std::runtime_error("\033[1;31m Return Type '" + symbolTable.lastExpressionType + "' is of invalid type \033[0m");
+        string lastExpression = "<Function type= '"+symbolTable.lastExpressionType+"'>";
+        if(lastExpression != type){
+            cout << type;
+            throw std::runtime_error("\033[1;31m Return Type '" + lastExpression + "' is of invalid type, expected: " + type + "\033[0m");
         }
 
-
         symbolTable.exitScope();
+        inAFunction = false;
     }
     void VisitNode(FormalParamsNode* node) override {
         node->formalParamLeft->accept(this);
@@ -106,7 +115,7 @@ public:
     void VisitNode(WhileStatementNode* node) override {
         symbolTable.enterScope(); //Testing Placement
         node->expression->accept(this);
-        if(symbolTable.lastExpressionType != BOOLEAN_LITERAL){
+        if(symbolTable.lastExpressionType != BOOL){
             throw std::runtime_error("\033[1;31m While Statement Expression must be a boolean literal not '" + symbolTable.lastExpressionType +"' \033[0m");
         }
         node->block->accept(this);
@@ -126,7 +135,7 @@ public:
     }
     void VisitNode(IfStatementNode* node) override {
         node->expression->accept(this);
-        if(symbolTable.lastExpressionType != BOOLEAN_LITERAL){
+        if(symbolTable.lastExpressionType != BOOL ){
             throw std::runtime_error("\033[1;31m If Statement Expression must be a boolean literal not '" + symbolTable.lastExpressionType +"' \033[0m");
         }
         symbolTable.enterScope(); //Testing Placement
@@ -139,6 +148,10 @@ public:
         }
     }
     void VisitNode(RtrnStatementNode* node) override {
+        if(!inAFunction){
+            throw std::runtime_error("\033[1;31m return statement while not in a function! "
+                                     "\n Return Statements can only be used in functions!\033[0m");
+        }
         node->expression->accept(this);
     }
     void VisitNode(PixelStatementNode* node) override {
@@ -190,7 +203,7 @@ public:
         if(typeName != symbolTable.lastExpressionType){
             throw std::runtime_error("\033[1;31m Trying to Assign '" + symbolTable.lastExpressionType + "' to '" + symbolTable.lookup(varName)+"' \033[0m");
         }
-        cout << symbolTable.lastExpressionType;
+//        cout << symbolTable.lastExpressionType;
     }
     void VisitNode(ExpressionNode* node) override {
         node->leftSimpleExpression->accept(this);;
@@ -201,7 +214,7 @@ public:
             get<0>(node->rightSimpleExpression[counter])->accept(this);
             get<1>(node->rightSimpleExpression[counter])->accept(this);
             counter++;
-            symbolTable.lastExpressionType = "bool";
+            symbolTable.lastExpressionType = BOOL;
         }
     }
     void VisitNode(SimpleExpressionNode* node) override {
@@ -271,7 +284,7 @@ public:
     void VisitNode(AdditiveOpNode* node) override {}
     void VisitNode(MultiplicativeOpNode* node) override {}
     void VisitNode(BooleanLiteralNode* node) override {
-        symbolTable.lastExpressionType = "bool";
+        symbolTable.lastExpressionType = BOOL;
     }
     void VisitNode(IntegerLiteralNode* node) override {
         symbolTable.lastExpressionType = "int";
@@ -291,39 +304,27 @@ public:
 
 private:
     SymbolTable symbolTable;
+    bool inAFunction = false;
 };
 
-/*
-int main(){
-    //string testString = "let x : int = ( ( 3 * 4 ) + 5 * 7 + ( 0 ) / 100 ) ;";
-    string testString = "let c : colour = g ( ) ; fun g ( ) -> int { return 1 ;  }";
-    cout << "Testing: " << testString << endl;
-    vector<string> splitString = split(testString,' ');
-    map<string,map<string,string>> lexerTable = loadMap(); //Loads the map from the CSV file
-    map<string, string> finalStates = loadFinalStates();
-    vector<string> allLetters = getListOfTokens(testString);
-    vector<string> allWords = split(testString,' ');
-    vector<string> allTokens = traverseDFSA(lexerTable,finalStates,allLetters);
-    vector<string> revisedTokens = reviseTokens(allTokens,allWords);
-
-*/
-/*    for (const std::string& str : allTokens) {
-        std::cout << str << " ";
-    }
-    cout << endl;
-
-    for (const std::string& str : revisedTokens) {
-        std::cout << str << " ";
-    }
-    cout << endl;*//*
-
-    system("Color 09");
-    revisedTokens.emplace_back(END_OF_FILE);
-    unique_ptr<Parser> parser = make_unique<Parser>(revisedTokens,splitString);
-    unique_ptr<ProgramNode> tokens = parser->parseProgram();
-    unique_ptr<SemaniticVisitor> semaniticVisitor = make_unique<SemaniticVisitor>();
-    auto node = new SemaniticVisitor();
-    tokens->accept(node);
-    cout << endl;
-    return 0;
-}*/
+//int main(){
+//    //Lexer Stuff
+//    Lexer lex = Lexer();
+//    lex.LexerPassFile("../bidmasTest.txt");
+//    vector<string> programTokenized = lex.getProgramVector();
+//    vector<string> revisedTokens = lex.getRevisedTokens();
+//    string programString = lex.getProgramString();
+//
+//    cout << programString << endl;
+//    for (const std::string& str : revisedTokens) {
+//        std::cout << str << " ";
+//    }
+//
+//    //Parse Program
+//    unique_ptr<Parser> parser = make_unique<Parser>(revisedTokens, programTokenized);
+//    unique_ptr<ProgramNode> tokens = parser->parseProgram();
+//    unique_ptr<SemaniticVisitor> semaniticVisitor = make_unique<SemaniticVisitor>();
+//    auto node = new SemaniticVisitor();
+//    tokens->accept(node);
+//    return 0;
+//}

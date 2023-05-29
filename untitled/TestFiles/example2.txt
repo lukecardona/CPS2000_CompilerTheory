@@ -1,0 +1,8 @@
+z = 0;
+
+while(z < 500){
+    x = __randi __width;
+    y = __randi __height;
+    __pixel x,y,#ffffff;
+    z = z+1;
+}

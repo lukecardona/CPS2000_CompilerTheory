@@ -1,0 +1,4 @@
+let x:int = ___randi __width;
+let y:int = ___randi __height;
+let z:int = 0;
+let k:colour = #ffffff;

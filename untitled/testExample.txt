@@ -1,0 +1,27 @@
+let x:int = __randi __width;
+let y:int = __randi __height;
+let z:int = 0;
+let k:colour = #ffffff;
+
+z = 0;
+
+while(z < 500){
+    x = __randi __width;
+    y = __randi __height;
+    __pixel x,y,#ffffff;
+    z = z+1;
+}
+
+
+
+
+while(z < 500){
+    x = __randi __width;
+    y = __randi __height;
+    __pixel x,y,#ff69ff;
+    z = z+1;
+}
+
+
+
+

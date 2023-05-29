@@ -3,6 +3,7 @@
 
 #include "lexer.h"
 
+
 #define NULL_PRODUCTION "<Null>"
 #define PROGRAM "<Program>"
 #define STATEMENT "<Statement>"
@@ -74,7 +75,6 @@ public:
     const string& getNodeType() const override;
     void accept(Visitor* visitor) override;
 };
-
 class TypeNode : public ASTNode{
 public:
     TypeNode() : ASTNode(TYPE) {}
@@ -403,8 +403,6 @@ public:
     virtual void VisitNode(ColourLiteralNode* node) = 0;
     virtual void VisitNode(PadWidthNode* node) = 0;
     virtual void VisitNode(PadHeightNode* node) = 0;
-    // More visit methods for other node types
-
 };
 class Parser{
 public:
@@ -452,8 +450,8 @@ private:
     unique_ptr<IntegerLiteralNode> parseIntegerLiteralNode();
     unique_ptr<FloatLiteralNode> parseFloatLiteralNode();
     unique_ptr<ColourLiteralNode> parseColourLiteralNode();
-    static unique_ptr<PadWidthNode> parsePadWidthNode();
-    static unique_ptr<PadHeightNode> parsePadHeightNode();
+    unique_ptr<PadWidthNode> parsePadWidthNode();
+    unique_ptr<PadHeightNode> parsePadHeightNode();
 };
 
 #endif //UNTITLED_PARSER_H

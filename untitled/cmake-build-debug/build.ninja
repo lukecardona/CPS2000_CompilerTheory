@@ -49,14 +49,32 @@ cmake_ninja_workdir = C$:/Users/lukec/CLionProjects/untitled/cmake-build-debug/
 
 build cmake_object_order_depends_target_untitled: phony || CMakeFiles/untitled.dir
 
+build CMakeFiles/untitled.dir/Parser.cpp.obj: CXX_COMPILER__untitled_Debug C$:/Users/lukec/CLionProjects/untitled/Parser.cpp || cmake_object_order_depends_target_untitled
+  DEP_FILE = CMakeFiles\untitled.dir\Parser.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++14
+  OBJECT_DIR = CMakeFiles\untitled.dir
+  OBJECT_FILE_DIR = CMakeFiles\untitled.dir
+
+build CMakeFiles/untitled.dir/XMLGeneration.cpp.obj: CXX_COMPILER__untitled_Debug C$:/Users/lukec/CLionProjects/untitled/XMLGeneration.cpp || cmake_object_order_depends_target_untitled
+  DEP_FILE = CMakeFiles\untitled.dir\XMLGeneration.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++14
+  OBJECT_DIR = CMakeFiles\untitled.dir
+  OBJECT_FILE_DIR = CMakeFiles\untitled.dir
+
+build CMakeFiles/untitled.dir/SemanticAnylsis.cpp.obj: CXX_COMPILER__untitled_Debug C$:/Users/lukec/CLionProjects/untitled/SemanticAnylsis.cpp || cmake_object_order_depends_target_untitled
+  DEP_FILE = CMakeFiles\untitled.dir\SemanticAnylsis.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++14
+  OBJECT_DIR = CMakeFiles\untitled.dir
+  OBJECT_FILE_DIR = CMakeFiles\untitled.dir
+
 build CMakeFiles/untitled.dir/Lexer.cpp.obj: CXX_COMPILER__untitled_Debug C$:/Users/lukec/CLionProjects/untitled/Lexer.cpp || cmake_object_order_depends_target_untitled
   DEP_FILE = CMakeFiles\untitled.dir\Lexer.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always -std=gnu++14
   OBJECT_DIR = CMakeFiles\untitled.dir
   OBJECT_FILE_DIR = CMakeFiles\untitled.dir
 
-build CMakeFiles/untitled.dir/Parser.cpp.obj: CXX_COMPILER__untitled_Debug C$:/Users/lukec/CLionProjects/untitled/Parser.cpp || cmake_object_order_depends_target_untitled
-  DEP_FILE = CMakeFiles\untitled.dir\Parser.cpp.obj.d
+build CMakeFiles/untitled.dir/CodeGen.cpp.obj: CXX_COMPILER__untitled_Debug C$:/Users/lukec/CLionProjects/untitled/CodeGen.cpp || cmake_object_order_depends_target_untitled
+  DEP_FILE = CMakeFiles\untitled.dir\CodeGen.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always -std=gnu++14
   OBJECT_DIR = CMakeFiles\untitled.dir
   OBJECT_FILE_DIR = CMakeFiles\untitled.dir
@@ -69,7 +87,7 @@ build CMakeFiles/untitled.dir/Parser.cpp.obj: CXX_COMPILER__untitled_Debug C$:/U
 #############################################
 # Link the executable untitled.exe
 
-build untitled.exe: CXX_EXECUTABLE_LINKER__untitled_Debug CMakeFiles/untitled.dir/Lexer.cpp.obj CMakeFiles/untitled.dir/Parser.cpp.obj
+build untitled.exe: CXX_EXECUTABLE_LINKER__untitled_Debug CMakeFiles/untitled.dir/Parser.cpp.obj CMakeFiles/untitled.dir/XMLGeneration.cpp.obj CMakeFiles/untitled.dir/SemanticAnylsis.cpp.obj CMakeFiles/untitled.dir/Lexer.cpp.obj CMakeFiles/untitled.dir/CodeGen.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\untitled.dir

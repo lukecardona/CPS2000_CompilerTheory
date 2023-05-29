@@ -326,6 +326,7 @@ unique_ptr<FormalParamsNode> Parser::parseFormalParamsNode(){
 unique_ptr<FormalParamNode> Parser::parseFormalParamNode(){
     unique_ptr<FormalParamNode> formalParamNode = make_unique<FormalParamNode>();
     formalParamNode->identifier = parseIdentifierNode();
+    consumeToken(COLON_TOKEN);
     formalParamNode->type = parseTypeNode();
     return std::move(formalParamNode);
 }
@@ -373,6 +374,8 @@ unique_ptr<IfStatementNode> Parser::parseIfStatementNode(){
 
     consumeToken(CLOSE_BRACKET_TOKEN);
 
+    ifStatementNode->ifBlock = std::move(parseBlockNode());
+
     if(currentState == ELSE_TOKEN){
 
         consumeToken(ELSE_TOKEN);
@@ -413,6 +416,8 @@ unique_ptr<PixelStatementNode> Parser::parsePixelStatementNode(){
     }
 
     if(currentState == SPECIAL_PIXEL){
+        consumeToken(SPECIAL_PIXEL);
+
         get<0>(pixelStatementNode->pixel) = std::move(parseExpressionNode());
         consumeToken(COMMA_TOKEN);
 
@@ -732,9 +737,11 @@ unique_ptr<ColourLiteralNode> Parser::parseColourLiteralNode(){
 }
 unique_ptr<PadWidthNode> Parser::parsePadWidthNode(){
     unique_ptr<PadWidthNode> node = make_unique<PadWidthNode>();
+    consumeToken(PAD_WIDTH);
     return std::move(node);
 }
 unique_ptr<PadHeightNode> Parser::parsePadHeightNode(){
     unique_ptr<PadHeightNode> node = make_unique<PadHeightNode>();
+    consumeToken(PAD_HEIGHT);
     return std::move(node);
 }

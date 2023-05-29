@@ -11,7 +11,9 @@
 #include <memory>
 #include <stack>
 #include <tuple>
+#include <windows.h>
 
+#define DELIMITERS "*/+-=!={}(),<>:; "
 #define FINAL_STATE "1"
 #define LETTER_TOKEN "<letter>"
 #define DIGIT_TOKEN "<digit>"
@@ -40,6 +42,7 @@
 #define LESS_THAN_TOKEN "<"
 #define GREATER_THAN_TOKEN ">"
 #define EQUALS_TOKEN "<=>"
+#define ARROW_TOKEN "->"
 #define NOT_TOKEN "!"
 #define OPEN_CURLY_BRACKET_TOKEN "<{>"
 #define CLOSE_CURLY_BRACKET_TOKEN "<}>"
@@ -75,15 +78,31 @@
 #define ADDITIVE_OP "<AdditiveOp>"
 #define RELATIONAL_OP "<RelationalOp>"
 #define IDENTIFIER "<Identifier>"
+#define END_OF_FILE "<EOF>"
 
 using namespace std;
 
-std::vector<std::string> split(const std::string &s, char delimiter);
-map<string,map<string,string>> loadMap();
-map<string, string> loadFinalStates();
-string checkValidToken(char value);
-vector<string> getListOfTokens(string line);
-vector<string> traverseDFSA(map<string,map<string,string>> lexerTable, map<string, string> finalStates, vector<string> allLetters);
-vector<string> reviseTokens(const vector<string>& allTokens, vector<string> allWords);
 
+class Lexer {
+public:
+    Lexer() = default;
+    void LexerPassFile(const string& path);
+    vector<string> getRevisedTokens();
+    vector<string> getProgramVector();
+    string getProgramString();
+private:
+    vector<string> revisedTokens;
+    vector<string> programVector;
+    string programString;
+    static vector<string> split(const string &s, char delimiter);
+    static vector<string> splitLine(const string& s, const string& delimiters);
+    static vector<string> loadProgramFile(const string& path);
+    static string vectorToString(const vector<string>& programTokens);
+    static map<string,map<string,string>> loadMap();
+    static map<string, string> loadFinalStates();
+    static string checkValidToken(char value);
+    static vector<string> getListOfTokens(string line);
+    static vector<string> traverseDFSA(map<string,map<string,string>> lexerTable, map<string, string> finalStates, vector<string> allLetters);
+    static vector<string> reviseTokens(const vector<string>& allTokens, vector<string> allWords);
+};
 #endif //UNTITLED_LEXER_H
